@@ -12,13 +12,13 @@ from scipy.spatial.transform import Rotation
 
 from graspnet import GraspNet
 
+from RobotBasics import RobotBasics
 from myRobot import myRobot
 
 
-
-class Grasper(myRobot):
-    def __init__(self):
-        super().__init__()
+class Grasper:
+    def __init__(self, bot: myRobot):
+        self._bot = bot
         self.grasp_net = GraspNet()
         self.grasp_net.set_factor_depth(1. / self.depth_scale)
         self.logger.info("Grasper initialized")
@@ -32,7 +32,7 @@ class Grasper(myRobot):
         workspace_mask = self.bbox_to_mask(bbox, margin)
         
         end_points, cloud = self.grasp_net.process_data(color_image, depth_image, workspace_mask,
-                                                        self.intrinsic_matrix, self.H, self.W)
+                                                        self._bot.intrinsic_matrix, self._bot.H, self._bot.W)
         
         return end_points, cloud
     
@@ -57,18 +57,18 @@ class Grasper(myRobot):
         pred_translation[2] -= 0.035
 
         return [pred_translation, pred_quat]
-        
+    
     def grasp_at(self, position):
         '''
         Grasp at the given position
         '''
         
         translations, rotations = position[0], position[1]
-        self.gripper(grasp=False)
+        self._bot.grasp = False
         time.sleep(0.5)
-        self.move_to(translations, rotations)
+        self._bot.move_to(translations, rotations)
         time.sleep(0.5)
-        self.gripper(grasp=True)
+        self._bot.grasp = True
         time.sleep(0.5)
 
 
@@ -85,7 +85,7 @@ class Grasper(myRobot):
             x1, x2 = int(x1), int(x2)
             y1, y2 = int(y1), int(y2)
             workspace_mask[y1:y2, x1:x2] = True
-            
+
             return workspace_mask
         else:
             return None
@@ -99,7 +99,7 @@ class Grasper(myRobot):
         # Compute Z direction angle of grisppers
         for gg in grippers:
             # _, _, rotation = self.cam2base(gg, offset=0)
-            trans_marix = self.cam2base(gg, offset=0)
+            trans_marix = self._bot.cam2base(gg, offset=0)
             trans, rotation = trans_marix[3, :3], trans_marix[:3, :3]
             z_direction = rotation[:, 0]
             direction = np.array([0, 0, -1])
@@ -121,71 +121,6 @@ class Grasper(myRobot):
         # print('angles[index[0]]: ', angles[index[0]])
         return grippers[int(index[0])]
 
-    def cam2base(self, gg, offset=0.12):
-        '''
-            Tranform gripper: Camera --> Object --> End
-            Object Frame: Grasped Object
-                X: Forward, Y: Right, Z: Down
-            Camera Frame: Color-Depth Camera
-                X: Right, Y: Down, Z: Forward
-            End Frame: 
-                X: Down, Y: Left, Z: Forward
-        '''
-        Tmat_cam2obj = np.eye(4)
-        Tmat_cam2obj[:3,:3] = gg.rotation_matrix # @ Rotation.from_euler('xyz', [0, 90, 0], degrees=True).as_matrix()
-        Tmat_cam2obj[:3, 3] = gg.translation
-
-        Tmat_base2end = np.eye(4)
-        Tmat_base2end[:3,:3] = Rotation.from_quat(self.rotations_list).as_matrix()
-        Tmat_base2end[:3, 3] = self.translations_list
-
-        # Static Matrix
-        Tmat_end2cam = np.array([
-            [0.04855, -0.30770,  0.95024, -0.12346],
-            [-0.99602, 0.05626,  0.06910, -0.01329],
-            [-0.07472, -0.94982, -0.30375, 0.09521], 
-            [0,         0,        0,             1]
-        ])
-
-        Tmat_base2obj = Tmat_base2end @ Tmat_end2cam @ Tmat_cam2obj
-        rotation = Tmat_base2obj[:3, :3]
-        rot_euler = Rotation.from_matrix(rotation).as_euler("xyz")
-        if abs(rot_euler[0]) > np.pi / 2.:
-            if rot_euler[0] > 0.0:
-                rot_euler[0] -= np.pi
-            else:
-                rot_euler[0] += np.pi
-
-        if (rot_euler[0]*rot_euler[2]) < 0.0:
-            if rot_euler[0] > 0.0:
-                rot_euler[2] += np.pi
-            else:
-                rot_euler[2] -= np.pi
-
-        if abs(rot_euler[2]) > np.pi / 2.:
-            if rot_euler[2] > 0.0:
-                rot_euler[2] -= np.pi
-            else:
-                rot_euler[2] += np.pi
-
-        
-        Tmat_base2obj[:3, :3] = Rotation.from_euler("xyz", rot_euler).as_matrix()
-        print(Tmat_base2obj[:3, 3])
-        # # Protection Mechanism
-        # if Tmat_base2pick_step1[0,3] > 0.40 or Tmat_base2pick_step1[0,3] < 0.05:
-        #     print('!!!! ==== X out range ==== !!!!')
-        #     Tmat_base2pick_step1[0,3] = min(Tmat_base2pick_step1[0,3], 0.50)
-        #     Tmat_base2pick_step1[0,3] = max(Tmat_base2pick_step1[0,3], 0.20)
-        # if Tmat_base2pick_step1[1,3] > 0.20 or Tmat_base2pick_step1[1,3] < -0.20:
-        #     print('!!!! ==== Y out range ==== !!!!')
-        #     Tmat_base2pick_step1[1,3] = min(Tmat_base2pick_step1[1,3],  0.20)
-        #     Tmat_base2pick_step1[1,3] = max(Tmat_base2pick_step1[1,3], -0.20)
-        if Tmat_base2obj[2, 3] < -0.09:
-            print('!!!! ==== Z out range ==== !!!!')
-            Tmat_base2obj[2, 3] = max(Tmat_base2obj[2,3], -0.10)
-
-        return Tmat_base2obj
-    
     
     
 if __name__ == '__main__':

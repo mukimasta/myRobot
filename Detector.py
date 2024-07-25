@@ -27,7 +27,7 @@ class Detector:
         self.classes = classes
         self.detector.set_classes(classes)
     
-    def detect_object(self, color_image):
+    def detect_objects(self, color_image):
         '''
         Detect object in the image
         '''
