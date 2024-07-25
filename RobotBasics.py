@@ -28,7 +28,7 @@ class RobotBasics:
         # -----------------------
         
         self.hardware_init()
-        self.gripper(grasp=False)
+        self.grasp = False
     
     
     def hardware_init(self):
@@ -80,7 +80,7 @@ class RobotBasics:
 
     @property
     def gripper(self):
-        return self.get_current_end()
+        return self.bot.get_current_end()
     
     @gripper.setter
     def gripper(self, value: float):

@@ -42,7 +42,7 @@ class myRobot(RobotBasics):
         
     def pick_object(self, id:int):
         if self.objects is not None:
-            bbox = torch.tensor(self.objects.boxes[id].xyxy[0], dtype=torch.int).numpy()
+            bbox = self.objects.boxes[id].xyxy[0].to(torch.int).numpy()
             pos = self.grasper.get_grasp(self.color_image, self.depth_image, bbox)
             self.grasper.grasp_at(pos)
         else:

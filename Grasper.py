@@ -13,15 +13,13 @@ from scipy.spatial.transform import Rotation
 from graspnet import GraspNet
 
 from RobotBasics import RobotBasics
-from myRobot import myRobot
-
 
 class Grasper:
-    def __init__(self, bot: myRobot):
+    def __init__(self, bot: RobotBasics):
         self._bot = bot
         self.grasp_net = GraspNet()
-        self.grasp_net.set_factor_depth(1. / self.depth_scale)
-        self.logger.info("Grasper initialized")
+        self.grasp_net.set_factor_depth(1. / self._bot.depth_scale)
+        self._bot.logger.info("Grasper initialized")
     
     def get_cloud(self, color_image, depth_image, bbox, margin=20):
         '''
@@ -50,7 +48,7 @@ class Grasper:
             # o3d.visualization.draw_geometries([cloud])
             o3d.visualization.draw_geometries([cloud, gripper.to_open3d_geometry()])
         
-        gripper = self.cam2base(gripper, offset=0)
+        gripper = self._bot.cam2base(gripper, offset=0)
         pred_translation, pred_rotation = gripper[:3, 3], gripper[:3, :3]
         rot_euler = Rotation.from_matrix(pred_rotation).as_euler("xyz")
         pred_quat = Rotation.from_matrix(pred_rotation).as_quat()
@@ -63,10 +61,9 @@ class Grasper:
         Grasp at the given position
         '''
         
-        translations, rotations = position[0], position[1]
         self._bot.grasp = False
         time.sleep(0.5)
-        self._bot.move_to(translations, rotations)
+        self._bot.move_to(position)
         time.sleep(0.5)
         self._bot.grasp = True
         time.sleep(0.5)
@@ -76,12 +73,12 @@ class Grasper:
     
     def bbox_to_mask(self, bbox, margin):
         if len(bbox) > 0:
-            workspace_mask = np.zeros(shape=[self.H, self.W], dtype=np.bool_)
+            workspace_mask = np.zeros(shape=[self._bot.H, self._bot.W], dtype=np.bool_)
             x1, y1, x2, y2 = bbox[0], bbox[1], bbox[2], bbox[3]
             x1 = x1 - margin if x1 - margin > 0 else 0
             y1 = y1 - margin if y1 - margin > 0 else 0
-            x2 = x2 + margin if x2 + margin < self.W else self.W
-            y2 = y2 + margin if y2 + margin < self.H else self.H       
+            x2 = x2 + margin if x2 + margin < self._bot.W else self._bot.W
+            y2 = y2 + margin if y2 + margin < self._bot.H else self._bot.H       
             x1, x2 = int(x1), int(x2)
             y1, y2 = int(y1), int(y2)
             workspace_mask[y1:y2, x1:x2] = True

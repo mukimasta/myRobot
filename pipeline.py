@@ -1,26 +1,21 @@
-import time
+from myRobot import myRobot
 
-import torch
-import numpy as np
 
-import Grasper
-import Detector
+path = "YOLO/yolov8l-worldv2.pt"
 
-detector = Detector.Detector("./path")
-grasper = Grasper.Grasper()
+bot = myRobot()
 
-color_image, depth_image = grasper.get_image_and_depth()
-
-hits = detector.detect_object(color_image)
+bot.set_detector(path)
+hits = bot.detect_objects()
 hits.show()
 
-id = input("Which object do you want to grasp: ")
+id = input("Enter the id of the object you want to pick up: ")
 
-bbox = torch.tensor(hits.boxes[int(id)].xyxy[0], dtype=torch.int).numpy()
-print("Bounding Box:", bbox)
+bot.pick_object(int(id))
 
-pos = grasper.get_grasp(color_image, depth_image, bbox)
-grasper.grasp_at(pos)
+bot.move_to([bot.translations_list, bot.rotations_list])
 
-grasper.move_to(grasper.translations_list, grasper.rotations_list)
+input()
+
+bot.grasp = False
 
