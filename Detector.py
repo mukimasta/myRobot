@@ -4,6 +4,7 @@ import os
 import numpy as np
 import torch
 
+
 class Detector:
     def __init__(self, model_path, device="cpu"):
         self.device = device
@@ -43,14 +44,14 @@ class Detector:
             (result.boxes.data[:, :4], torch.arange(len(result)).unsqueeze(1), result.boxes.data[:, 4:]), 
             dim=1
         )
-            
+        
         return result
     
 
 if __name__ == '__main__':
-    detector = Detector("yolov8s-worldv2.pt")
+    detector = Detector("YOLO/yolov8x-worldv2.pt")
     # print(detector.classes)
-    color_image = cv2.imread("test/test3.jpg")
+    color_image = cv2.imread("YOLO/test3.jpg")
     
-    hits = detector.detect_object(color_image)
+    hits = detector.detect_objects(color_image)
     hits.show()

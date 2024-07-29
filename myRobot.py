@@ -20,7 +20,7 @@ class myRobot(RobotBasics):
         
         self.grasper = Grasper(self)
         self.get_cloud = self.grasper.get_cloud
-        self.logger.info("myRobot initialized")
+        self.logger.info("myRobot initialized!")
     
         self.detector = None
         self.objects = None
@@ -47,3 +47,5 @@ class myRobot(RobotBasics):
             self.grasper.grasp_at(pos)
         else:
             self.logger.error("Objects are not detected")
+            
+    

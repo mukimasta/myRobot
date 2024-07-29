@@ -125,3 +125,5 @@ logs/tool_set_zero_logs2024-07-25 13:17:16.log
 logs/tool_set_zero_logs2024-07-25 13:22:04.log
 logs/tool_set_zero_logs2024-07-25 13:27:03.log
 cloud.ply
+YOLO/yolov8s-worldv2.pt
+YOLO/yolov8x-worldv2.pt

@@ -63,15 +63,15 @@ class RobotBasics:
 
         # ====================== Initialize Robot =======================
         self.logger.info("Initializing Robot......")
-        self.translations_list = [0.145, -0.042, 0.2054]
-        self.rotations_list = [-0.061, 0.497, -0.059, 0.863]
-
         
+        self.pos_table_view = [[0.145, -0.042, 0.2054], [-0.061, 0.497, -0.059, 0.863]]
+
         urdf_path = airbot.AIRBOT_PLAY_WITH_GRIPPER_URDF
         self.bot = airbot.create_agent("down", "can0", 1.0, "gripper", 'OD', 'DM')
-        self.bot.set_target_pose(self.translations_list, self.rotations_list, blocking=True)
+        # self.bot.set_target_pose(self.translations_list, self.rotations_list, blocking=True)
+        self.move_to(self.pos_table_view)
         
-        self.logger.info("Complete!")
+        self.logger.info("Initialization Complete!")
 
 
     @property
