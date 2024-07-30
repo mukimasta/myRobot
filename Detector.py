@@ -26,7 +26,7 @@ class Detector:
         
     def set_classes(self, classes):
         self.classes = classes
-        self.detector.set_classes(classes)
+        self.model.set_classes(self.classes)
     
     def detect_objects(self, color_image):
         '''
@@ -49,9 +49,10 @@ class Detector:
     
 
 if __name__ == '__main__':
-    detector = Detector("YOLO/yolov8x-worldv2.pt")
+    detector = Detector("./YOLO/yolov8x-worldv2.pt", "cuda")
     # print(detector.classes)
     color_image = cv2.imread("YOLO/test3.jpg")
     
     hits = detector.detect_objects(color_image)
+    print(len(hits))
     hits.show()
